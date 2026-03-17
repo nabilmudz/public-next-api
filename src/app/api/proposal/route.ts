@@ -33,6 +33,7 @@ export async function POST(request: Request) {
       const proposalFile = formData.get('proposalFile') as File | null
 
       payload = {
+        ownerId: formData.get('ownerId')?.toString(),
         title: formData.get('title')?.toString(),
         category: formData.get('category')?.toString(),
         focusType: formData.get('focusType')?.toString(),

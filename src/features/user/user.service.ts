@@ -14,6 +14,10 @@ export const userService = {
     return await userRepository.findById(id)
   },
 
+  async getByUserId(id: string) {
+    return await userRepository.findByUser(id)
+  },
+
   async create(payload: CreateUserInput) {
     const password = payload.password ?? "12345678"
     const hashedPassword = await hashPassword(password)

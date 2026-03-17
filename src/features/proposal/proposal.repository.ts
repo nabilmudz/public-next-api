@@ -26,10 +26,25 @@ export const proposalRepository = {
       },
     })
   },
+  
+  async findByOwnerId(ownerId: string) {
+    return await prisma.proposal.findMany({
+      where: { ownerId },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      include: {
+        owner: true,
+        serviceMembers: true,
+        studentMembers: true,
+      },
+    })
+  },
 
   async create(payload: CreateProposalInput) {
     return await prisma.proposal.create({
       data: {
+        ownerId: payload.ownerId,
         title: payload.title,
         category: payload.category!,
         focusType: payload.focusType!,

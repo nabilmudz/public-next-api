@@ -12,6 +12,9 @@ export const proposalService = {
   async getById(id: string) {
     return await proposalRepository.findById(id)
   },
+  async getByUserId(id: string) {
+    return await proposalRepository.findByOwnerId(id)
+  },
 
   async create(payload: CreateProposalInput) {
     if (payload.inputMode === 'UPLOAD' && payload.fileMimeType !== 'application/pdf') {

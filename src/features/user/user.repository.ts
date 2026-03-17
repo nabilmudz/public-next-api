@@ -19,6 +19,12 @@ export const userRepository = {
     })
   },
 
+  async findByUser(id: string) {
+    return await prisma.user.findUnique({
+      where: { id },
+    })
+  },
+
   async create(payload: CreateUserInput) {
     return await prisma.user.create({
       data: payload,

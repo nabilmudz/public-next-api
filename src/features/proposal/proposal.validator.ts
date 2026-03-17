@@ -16,6 +16,7 @@ export const proposalStudentMemberSchema = z.object({
 
 const proposalBaseSchema = z.object({
   title: z.string(),
+  ownerId: z.string().uuid(),
   category: z.enum(['PENELITIAN', 'PENGABDIAN']),
   focusType: z.enum(['TEMATIK', 'RIRN']),
   focusValue: z.string(),

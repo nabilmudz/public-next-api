@@ -32,6 +32,7 @@ export type ProposalFile = {
 
 export type Proposal = {
   id: string
+  ownerId: string
   title: string
   category: ProgramCategory
   focusType: FocusType
@@ -63,6 +64,7 @@ export type Proposal = {
 
 type BaseProposalInput = {
   title: string
+  ownerId: string
   category?: ProgramCategory | null
   focusType?: FocusType | null
   focusValue?: string | null
