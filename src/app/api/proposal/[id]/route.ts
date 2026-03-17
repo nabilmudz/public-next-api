@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { proposalService } from '@/features/proposal/proposal.service'
 import { updateProposalSchema } from '@/features/proposal/proposal.validator'
+import { deleteProposalFile, saveProposalFile } from '@/utils/proposal-upload'
 
 type RouteContext = {
   params: Promise<{ id: string }>
@@ -38,6 +39,9 @@ const parseJsonArray = <T = unknown>(value: FormDataEntryValue | null): T[] => {
 }
 
 export async function PUT(request: Request, context: RouteContext) {
+  let savedFileUrl: string | undefined
+  let previousFileUrl: string | null | undefined
+
   try {
     const { id } = await context.params
     const contentType = request.headers.get('content-type') || ''
@@ -76,13 +80,12 @@ export async function PUT(request: Request, context: RouteContext) {
           : undefined,
       }
 
-      if (proposalFile) {
-        payload.fileName = proposalFile.name
-        payload.fileMimeType = proposalFile.type
-        payload.fileSize = proposalFile.size
-
-        // nanti ganti dengan upload ke storage
-        payload.fileUrl = `/uploads/${proposalFile.name}`
+      if (proposalFile && proposalFile.size > 0) {
+        const existing = await proposalService.getById(id)
+        const uploadedFile = await saveProposalFile(proposalFile)
+        savedFileUrl = uploadedFile.fileUrl
+        previousFileUrl = existing?.fileUrl
+        Object.assign(payload, uploadedFile)
       }
     } else {
       const body = await request.json()
@@ -106,12 +109,20 @@ export async function PUT(request: Request, context: RouteContext) {
       )
     }
 
+    if (savedFileUrl && previousFileUrl && previousFileUrl !== savedFileUrl) {
+      await deleteProposalFile(previousFileUrl)
+    }
+
     return NextResponse.json({
       success: true,
       message: 'proposal updated successfully',
       data,
     })
   } catch (error) {
+    if (savedFileUrl) {
+      await deleteProposalFile(savedFileUrl)
+    }
+
     return NextResponse.json(
       {
         success: false,
@@ -125,6 +136,7 @@ export async function PUT(request: Request, context: RouteContext) {
 
 export async function DELETE(_: Request, context: RouteContext) {
   const { id } = await context.params
+  const existing = await proposalService.getById(id)
   const deleted = await proposalService.delete(id)
 
   if (!deleted) {
@@ -135,6 +147,10 @@ export async function DELETE(_: Request, context: RouteContext) {
       },
       { status: 404 }
     )
+  }
+
+  if (existing?.fileUrl) {
+    await deleteProposalFile(existing.fileUrl)
   }
 
   return NextResponse.json({

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { proposalService } from '@/features/proposal/proposal.service'
-import { createProposalSchema, updateProposalSchema } from '@/features/proposal/proposal.validator'
+import { createProposalSchema } from '@/features/proposal/proposal.validator'
+import { deleteProposalFile, saveProposalFile } from '@/utils/proposal-upload'
 
 export async function GET() {
   const data = await proposalService.getAll()
@@ -22,6 +23,8 @@ const parseJsonArray = <T = unknown>(value: FormDataEntryValue | null): T[] => {
 }
 
 export async function POST(request: Request) {
+  let savedFileUrl: string | undefined
+
   try {
     const contentType = request.headers.get('content-type') || ''
 
@@ -52,13 +55,10 @@ export async function POST(request: Request) {
         studentMembers: parseJsonArray(formData.get('studentMembers')),
       }
 
-      if (proposalFile) {
-        payload.fileName = proposalFile.name
-        payload.fileMimeType = proposalFile.type
-        payload.fileSize = proposalFile.size
-
-        // nanti ganti dengan upload ke storage
-        payload.fileUrl = `/uploads/${proposalFile.name}`
+      if (proposalFile && proposalFile.size > 0) {
+        const uploadedFile = await saveProposalFile(proposalFile)
+        savedFileUrl = uploadedFile.fileUrl
+        Object.assign(payload, uploadedFile)
       }
     } else {
       const body = await request.json()
@@ -77,6 +77,10 @@ export async function POST(request: Request) {
       { status: 201 }
     )
   } catch (error) {
+    if (savedFileUrl) {
+      await deleteProposalFile(savedFileUrl)
+    }
+
     return NextResponse.json(
       {
         success: false,
