@@ -13,6 +13,35 @@ enum UserRole {
   PROPOSAL_REVIEWER
 }
 
+enum ProgramCategory {
+  PENELITIAN
+  PENGABDIAN
+}
+
+enum FocusType {
+  TEMATIK
+  RIRN
+}
+
+enum ScopeLevel {
+  LOKAL
+  REGIONAL
+  NASIONAL
+  INTERNASIONAL
+}
+
+enum ProposalStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
+enum ProposalInputMode {
+  EDITOR
+  UPLOAD
+}
+
 model User {
   id           String   @id @default(uuid())
   name         String
@@ -23,4 +52,57 @@ model User {
   refreshToken String?  @db.Text
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+model Proposal {
+  id                    String   @id @default(uuid())
+  title                 String
+  category              ProgramCategory
+  focusType             FocusType
+  focusValue            String
+  schemeGroup           String
+  scopeLevel            ScopeLevel
+  firstProposalYear     Int
+  durationMonths        Int
+  scientificFieldLevel1 String
+  scientificFieldLevel2 String
+  scientificFieldLevel3 String
+  leadName              String
+  status                ProposalStatus @default(DRAFT)
+
+  inputMode    ProposalInputMode
+  editorContent String? @db.Text
+
+  fileUrl      String?
+  fileName     String?
+  fileMimeType String?
+  fileSize     Int?
+
+  serviceMembers ProposalServiceMember[]
+  studentMembers ProposalStudentMember[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProposalServiceMember {
+  id         String @id @default(uuid())
+  proposalId String
+  nidn       String
+  name       String
+  duty       String
+  status     String
+
+  proposal Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+}
+
+model ProposalStudentMember {
+  id             String @id @default(uuid())
+  proposalId     String
+  memberType     String
+  identityNumber String
+  name           String
+  duty           String
+
+  proposal Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
 }
